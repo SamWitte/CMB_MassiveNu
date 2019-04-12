@@ -117,23 +117,25 @@ class CMB(object):
         return
 
     def clearfiles(self):
-        if os.path.isfile(path + '/precomputed/ln_a_CT_working.dat'):
-            os.remove(path + '/precomputed/ln_a_CT_working.dat')
-
-        if os.path.isfile(path + '/precomputed/xe_working.dat'):
-            os.remove(path + '/precomputed/xe_working.dat')
-        if os.path.isfile(path + '/precomputed/tb_working.dat'):
-            os.remove(path + '/precomputed/tb_working.dat')
-
-        if os.path.isfile(path + '/precomputed/working_expOpticalDepth.dat'):
-            os.remove(path + '/precomputed/working_expOpticalDepth.dat')
-        if os.path.isfile(path + '/precomputed/working_VisibilityFunc.dat'):
-            os.remove(path + '/precomputed/working_VisibilityFunc.dat')
+#        if os.path.isfile(path + '/precomputed/ln_a_CT_working.dat'):
+#            os.remove(path + '/precomputed/ln_a_CT_working.dat')
+#
+#        if os.path.isfile(path + '/precomputed/xe_working.dat'):
+#            os.remove(path + '/precomputed/xe_working.dat')
+#        if os.path.isfile(path + '/precomputed/tb_working.dat'):
+#            os.remove(path + '/precomputed/tb_working.dat')
+#
+#        if os.path.isfile(path + '/precomputed/working_expOpticalDepth.dat'):
+#            os.remove(path + '/precomputed/working_expOpticalDepth.dat')
+#        if os.path.isfile(path + '/precomputed/working_VisibilityFunc.dat'):
+#            os.remove(path + '/precomputed/working_VisibilityFunc.dat')
+        return
 
     def loadfiles(self, tau=False):
 
         SingleUni = Universe(1., self.OM_b, self.OM_c, self.OM_g, self.OM_L,
-                             hubble_c=self.HubbleParam, zreion=self.z_reion)
+                             hubble_c=self.HubbleParam, zreion=self.z_reion,
+                             m_nu=self.mass_nu, T_nu=self.T_nu)
         self.ct_to_scale = lambda x: SingleUni.ct_to_scale(x)
         self.scale_to_ct = lambda x: SingleUni.scale_to_ct(x)
         if tau:
@@ -169,9 +171,10 @@ class CMB(object):
         for k in kgrid:
             stepsize = 1e-2
 
-            SingleUni = Universe(k, self.OM_b, self.OM_c, self.OM_g, self.OM_L, self.OM_nu,
+            SingleUni = Universe(k, self.OM_b, self.OM_c, self.OM_g, self.OM_L,
                                 stepsize=stepsize, accuracy=1e-3, lmax=self.lmax_Pert,
-                                hubble_c=self.HubbleParam, zreion=self.z_reion)
+                                hubble_c=self.HubbleParam, zreion=self.z_reion,
+                                m_nu=self.mass_nu, T_nu=self.T_nu)
             soln = SingleUni.solve_system(compute_TH)
         return soln
 

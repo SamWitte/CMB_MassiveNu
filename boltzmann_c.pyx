@@ -132,18 +132,19 @@ class Universe(object):
         return np.power(10., self.HubEv(np.log10(a)))
 
     def clearfiles(self):
-        if os.path.isfile(path + '/precomputed/background.dat'):
-            os.remove(path + '/precomputed/background.dat')
-
-        if os.path.isfile(path + '/precomputed/xe_working.dat'):
-            os.remove(path + '/precomputed/xe_working.dat')
-        if os.path.isfile(path + '/precomputed/tb_working.dat'):
-            os.remove(path + '/precomputed/tb_working.dat')
-
-        if os.path.isfile(path + '/precomputed/working_expOpticalDepth.dat'):
-            os.remove(path + '/precomputed/working_expOpticalDepth.dat')
-        if os.path.isfile(path + '/precomputed/working_VisibilityFunc.dat'):
-            os.remove(path + '/precomputed/working_VisibilityFunc.dat')
+#        if os.path.isfile(path + '/precomputed/background.dat'):
+#            os.remove(path + '/precomputed/background.dat')
+#
+#        if os.path.isfile(path + '/precomputed/xe_working.dat'):
+#            os.remove(path + '/precomputed/xe_working.dat')
+#        if os.path.isfile(path + '/precomputed/tb_working.dat'):
+#            os.remove(path + '/precomputed/tb_working.dat')
+#
+#        if os.path.isfile(path + '/precomputed/working_expOpticalDepth.dat'):
+#            os.remove(path + '/precomputed/working_expOpticalDepth.dat')
+#        if os.path.isfile(path + '/precomputed/working_VisibilityFunc.dat'):
+#            os.remove(path + '/precomputed/working_VisibilityFunc.dat')
+        return
 
     def Thermal_sln(self):
 
@@ -200,6 +201,14 @@ class Universe(object):
             try:
                 self.Tb_drk = np.loadtxt(self.tb_fileNme)
                 self.Xe_dark = np.loadtxt(self.Xe_fileNme)
+
+                tvals = 1. / self.Xe_dark[:,0] - 1.
+                fhe = 0.16381 / 2.
+                tanhV = (fhe + 1.) / 2. * (1. + np.tanh( 2.*((1.+self.zreion)**(3./2.) - (1.+ tvals)**1.5 ) / (3.*0.5*np.sqrt(1.+ tvals)) ))
+                zreionHE = 3.5
+                tanhV += fhe / 2. * (1. + np.tanh( 2.*((1.+zreionHE)**(3./2.) - (1.+ tvals)**1.5 ) / (3.*0.5*np.sqrt(1.+ tvals)) ))
+                self.Xe_dark[:, 1] += tanhV
+
             except:
                 print('fail to load xe and tb dark')
                 raise ValueError
@@ -342,9 +351,8 @@ class Universe(object):
     def tau_functions(self):
         self.fileN_optdep = path + '/precomputed/working_expOpticalDepth.dat'
         self.fileN_visibil = path + '/precomputed/working_VisibilityFunc.dat'
-#        cdef double Mpc_to_cm = 3.086e24
         cdef double Yp, n_b, thompson_xsec, hubbs, xevals
-        cdef cnp.ndarray[double] avals, tau, etavals, dtau, vis
+        cdef cnp.ndarray[double] avals, tau, etavals, vis
         cdef int i
         if not os.path.isfile(self.fileN_visibil) or not os.path.isfile(self.fileN_optdep):
             print('File not found... calculating...')
@@ -353,8 +361,7 @@ class Universe(object):
             thompson_xsec = 6.65e-25 # cm^2
             tau = np.zeros_like(avals)
 
-            n_b = self.n_bary
-            dtau = [-10.**self.Xe(log10(av))* (1. - Yp) * n_b * thompson_xsec * Mpc_to_cm / av**2. for av in avals]
+            dtau = np.asarray([-10.**self.Xe(log10(av))* (1. - Yp) * self.n_bary * thompson_xsec * Mpc_to_cm / av**2. for av in avals])
             etavals = 10.**self.scale_to_ctI(np.log10(avals))
             vis = np.zeros_like(avals)
 
