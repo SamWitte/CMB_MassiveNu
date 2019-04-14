@@ -286,20 +286,18 @@ class Universe(object):
         cdef double thompson_xsec = 6.65e-25 # cm^2
         cdef double facxe = 10.**self.Xe(log10(a))
         cdef double Yp = 0.245
-        cdef double epsil = 1e-3
+        cdef double epsil = a * 1e-2
         cdef double mol_wei
         mol_wei = (1. + 4. * Yp) / (1. + 2. * Yp + facxe) * 0.931
         cdef double Tb
         if (1./a - 1.) < 1e4:
             Tb = 10.**self.Tb(log10(a))
-            Tb2 = 10.**self.Tb(log10(a) - epsil)
-            tbderiv = (log10(Tb) - log10(Tb2)) / epsil * log(10.)
+            Tb2 = 10.**self.Tb(log10(a - epsil))
+            tbderiv = log(Tb / Tb2) / log(a / (a - epsil))
         else:
             tbderiv = -2.
             Tb = 2.7225 / a
-
-        cdef double val_r = kb * Tb / mol_wei * (1. - 1./3. * tbderiv)
-        return val_r
+        return kb * Tb / mol_wei * (1. - 1./3. * tbderiv)
 
     def xeDiff(self, val, y, tgas):
         ep0 =  10.2343 # eV
@@ -352,7 +350,7 @@ class Universe(object):
         self.fileN_optdep = path + '/precomputed/working_expOpticalDepth.dat'
         self.fileN_visibil = path + '/precomputed/working_VisibilityFunc.dat'
         cdef double Yp, n_b, thompson_xsec, hubbs, xevals
-        cdef cnp.ndarray[double] avals, tau, etavals, vis
+        cdef cnp.ndarray[double] tau, etavals, vis
         cdef int i
         if not os.path.isfile(self.fileN_visibil) or not os.path.isfile(self.fileN_optdep):
             print('File not found... calculating...')
