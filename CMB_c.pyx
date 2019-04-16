@@ -218,7 +218,6 @@ class CMB(object):
         cdef cnp.ndarray[double] ell_tab = ThetaTab[0,:]
         cdef cnp.ndarray[double, ndim=2] CL_table = np.zeros((len(ell_tab), 2))
         cdef double GF, ell
-        GF = ( self.OM_M / self.growthFactor(1.))**2.
 
         for i in range(len(ell_tab)):
             ell = ell_tab[i]
@@ -238,13 +237,6 @@ class CMB(object):
         np.savetxt(Cl_name, CL_table)
         return
 
-    def growthFactor(self, a):
-        # D(a)
-
-        prefac = 5. * self.OM_M / 2. *(self.Hubble(a) / self.H_0) * self.H_0**3.
-
-        integ_pt = quad(lambda x: 1./(x*self.Hubble(x)**3.), 0., a)[0]
-        return prefac * integ_pt
 
     def exp_opt_depth(self, eta):
         return self.opt_depth(self.ct_to_scale(eta))
@@ -281,9 +273,7 @@ class CMB(object):
         return Tktab
 
 
-    def Hubble(self, a):
-        hubble = self.H_0 * np.sqrt(self.OM_R/a**4 + self.OM_M/a**3 + self.OM_Lam)
-        return hubble
+   
 
 @cython.boundscheck(False)
 @cython.cdivision(True)

@@ -15,7 +15,7 @@ Neff = 3.046
 z_reion = 10.
 Om_b_load = 0.0492
 Om_c_load = 0.266
-mass_nu = 1e-3 # Sum neutrino mass in eV
+mass_nu = 1e-10 # Sum neutrino mass in eV
 T_nu = 0.71599 # relative temperature of neutrinos to photons
 
 
@@ -40,7 +40,7 @@ if compute_MPS:
 else:
     kmin = 8e-4
     kmax = 4e-1
-    knum = 60
+    knum = 120
 
 kTotNum = 5000
 lmax = 2500

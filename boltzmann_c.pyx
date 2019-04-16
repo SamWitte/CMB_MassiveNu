@@ -52,8 +52,10 @@ class Universe(object):
         self.k = k
 
         self.accuracy = accuracy
-        self.nu_q_bins = 100
-        self.q_list = np.linspace(1e-3, 20, self.nu_q_bins)
+#        self.nu_q_bins = 100
+#        self.q_list = np.linspace(1e-3, 20, self.nu_q_bins)
+        self.nu_q_bins = Nlaguerre
+        self.q_list = q_i_Lag
         self.TotalVars = 5 + 2*(self.Lmax+1) + (self.Lmax+1)*self.nu_q_bins
 
         self.step = 0
@@ -213,10 +215,10 @@ class Universe(object):
                 print('fail to load xe and tb dark')
                 raise ValueError
 
-        self.Tb = interp1d(np.log10(self.Tb_drk[:,0]), np.log10(self.Tb_drk[:,1]), kind='cubic',
-                            bounds_error=False, fill_value=0.)
-        self.Xe = interp1d(np.log10(self.Xe_dark[:,0]), np.log10(self.Xe_dark[:,1]), kind='cubic',
-                            bounds_error=False, fill_value=np.log10(1.16381))
+        self.Tb = interp1d(np.log10(self.Tb_drk[:,0]), np.log10(self.Tb_drk[:,1]), kind='linear',
+                            bounds_error=False, fill_value='extrapolate')
+        self.Xe = interp1d(np.log10(self.Xe_dark[:,0]), np.log10(self.Xe_dark[:,1]), kind='linear',
+                            bounds_error=False, fill_value='extrapolate')
 
         return
 
