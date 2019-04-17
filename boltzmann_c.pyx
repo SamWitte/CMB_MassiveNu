@@ -112,11 +112,6 @@ class Universe(object):
 
         self.Thermal_sln()
 
-# More accurate calc requires recfast precision on xe...
-#        backgrounds = np.loadtxt(path + '/precomputed/LCDM_background.dat')
-#        self.Xe = interp1d(np.log10(backgrounds[:, 0]), np.log10(backgrounds[:,2]), kind='cubic',
-#                            bounds_error=False, fill_value=np.log10(1.16380))
-
         self.eta_0 = self.conform_T(1.)
         self.ct_to_scaleI = interp1d(np.log10(eta_list), np.log10(a0_init), kind='cubic',
                                     bounds_error=True)
@@ -405,7 +400,7 @@ class Universe(object):
         for i in range(self.nu_q_bins):
             self.Neu_Dot[i].append(1./2. * initP * dlnf_dlnq[i])
             self.Neu_Dot[self.nu_q_bins + i].append(- eta_0 * self.k / 6. * initP * ep_over_q[i] * dlnf_dlnq[i])
-            self.Neu_Dot[self.nu_q_bins*2 + i].append(-1./30.*(self.k*eta_0)**2. * initP * dlnf_dlnq[i])
+            self.Neu_Dot[self.nu_q_bins*2 + i].append(-1./30. * (self.k*eta_0)**2. * initP * dlnf_dlnq[i])
 
         for i in range((self.Lmax + 1 - 3)*self.nu_q_bins):
             self.Neu_Dot[i + 3*self.nu_q_bins].append(0.)
@@ -569,11 +564,12 @@ class Universe(object):
         for i in range(self.TotalVars):
             self.combined_vector[i].append(ysol[i])
         self.Psi_vec.append(-12.*(aval**2./self.k**2.*(self.rhoG(aval)*self.combined_vector[11][-1])) - self.combined_vector[0][-1] + self.neu_N2_term(aval))
+
         return
 
     def b_vector(self, tau):
         cdef cnp.ndarray[double] bvec = np.zeros(self.TotalVars+1)
-        bvec[-1] = 1.
+        bvec[-1] = (1.+tau) - tau**2./(1.+tau)
         cdef int i
         for i in range(self.TotalVars):
             if self.step == 0:
@@ -600,7 +596,6 @@ class Universe(object):
         xc = max(eta_matter_rad * self.k, 1e3)
         self.gamma_supp = lambda x: 0.5 * (1. - np.tanh((x - xc) / 50.))
         cdef gammaSup = self.gamma_supp(self.k * eta)
-#        gammaSup = 1.
 
         if self.testing:
             self.aLIST.append(a_val)
@@ -628,7 +623,6 @@ class Universe(object):
         Jma[0, 3] += 1./(HUB**2.*2.)*rB
         Jma[0, 5] += 2./(HUB**2.)*rG
         Jma[0, -1] += -4. * np.pi * GravG / (3. * HUB**2.) * self.delta_rho_neu(a_val) / hbar**2. * (Mpc_to_cm/2.998e10)**2.
-#        print(-4. * np.pi * GravG / (3. * HUB**2.) * self.delta_rho_neu(a_val) / hbar**2. * (Mpc_to_cm/2.998e10)**2., self.neu_N2_term(a_val))
 
         # CDM density
         Jma[1,2] += -self.k/(HUB*a_val)
@@ -698,6 +692,7 @@ class Universe(object):
         Jma[9,9] += 9.*dTa / (10.*HUB*a_val) * gammaSup
         Jma[9,6] += -dTa / (10.*HUB*a_val) * gammaSup
         Jma[9,10] += -dTa /(10.*HUB*a_val) * gammaSup
+
         # ThetaP 2
         Jma[10,8] += 2.*self.k / (5.*HUB*a_val) * gammaSup
         Jma[10,12] += -3.*self.k / (5.*HUB*a_val) * gammaSup
@@ -721,6 +716,8 @@ class Universe(object):
         # Theta Lmax
         Jma[self.neu_indx-2, self.neu_indx-4] += self.k / (HUB*a_val) * gammaSup
         Jma[self.neu_indx-2, self.neu_indx-2] += (-(self.Lmax+1.)/eta + dTa) / (HUB*a_val) * gammaSup
+
+
         # ThetaP Lmax
         Jma[self.neu_indx-1, self.neu_indx-3] += self.k / (HUB*a_val) * gammaSup
         Jma[self.neu_indx-1, self.neu_indx-1] += (-(self.Lmax+1.)/eta + dTa) / (HUB*a_val) * gammaSup
@@ -780,7 +777,6 @@ class Universe(object):
         return self.omega_g * self.H_0**2. * a**-4.
 
     def rhoNeu_true(self, a):
-#        q_i, w_i = np.polynomial.laguerre.laggauss(Nlaguerre)
         val = np.sum(w_i_Lag * np.exp(q_i_Lag) * q_i_Lag**2. * np.sqrt((self.m_nu*a/self.T_nu)**2. + q_i_Lag**2.) / \
             (1. + np.exp(np.sqrt((self.m_nu*a/self.T_nu)**2. + q_i_Lag**2.))) ) * self.T_nu**4.
 #        val = 7*np.pi**4 * self.T_nu**4. / 120.
@@ -791,31 +787,28 @@ class Universe(object):
         # \delta T_00
         integrnd = [self.Neu_Dot[i][-1] * self.q_list[i]**2. * np.sqrt((self.m_nu * a / self.T_nu)**2.+self.q_list[i]**2.) / \
                     (1. + np.exp(np.sqrt((self.m_nu * a / self.T_nu)**2.+self.q_list[i]**2.) )) for i in range(self.nu_q_bins)]
-        interpF = interp1d(self.q_list, integrnd, kind='cubic', fill_value=0., bounds_error=False)
+#        interpF = interp1d(self.q_list, integrnd, kind='cubic', fill_value=0., bounds_error=False)
 
-#        q_i, w_i = np.polynomial.laguerre.laggauss(Nlaguerre)
-        val = np.sum(w_i_Lag * np.exp(q_i_Lag) * interpF(q_i_Lag))
+        val = np.sum(w_i_Lag * np.exp(q_i_Lag) * integrnd)
         return -3.045 * val * 4. * np.pi * 2. / (2.*np.pi)**3.  / a**4. * self.T_nu**4.
 
     def neu_vel_term(self, a):
         # (\rho_nu + P_nu) * \theta , up to normalization
         integrnd = [self.Neu_Dot[self.nu_q_bins + i][-1] * self.q_list[i]**3. / \
                         (1. + np.exp(np.sqrt((self.m_nu*a/self.T_nu)**2.+self.q_list[i]**2.) )) for i in range(self.nu_q_bins)]
-        interpF = interp1d(self.q_list, integrnd, kind='cubic', fill_value=0., bounds_error=False)
-#        q_i, w_i = np.polynomial.laguerre.laggauss(Nlaguerre)
-        val = np.sum(w_i_Lag * np.exp(q_i_Lag) * interpF(q_i_Lag))
+#        interpF = interp1d(self.q_list, integrnd, kind='cubic', fill_value=0., bounds_error=False)
+        val = np.sum(w_i_Lag * np.exp(q_i_Lag) * integrnd)
         return val * 4. * np.pi * self.k  * 2. / (2.*np.pi)**3.  / a**4. * 3.045 * self.T_nu**4.
 
     def neu_N2_term(self, a):
         # (\rho_nu + P_nu) * N2 , up to a normalization
-
-        integrnd = [self.Neu_Dot[self.nu_q_bins*2 + i][-1] * self.q_list[i]**4. / \
+        integrnd = [self.Neu_Dot[self.nu_q_bins*2 + i][-1] * self.q_list[i]**4. /
                     np.sqrt((self.m_nu*a/self.T_nu)**2. + self.q_list[i]**2.) /
                     (1. + np.exp(np.sqrt((self.m_nu*a/self.T_nu)**2.+self.q_list[i]**2.))) for i in range(self.nu_q_bins)]
-        interpF = interp1d(self.q_list, integrnd, kind='cubic', fill_value=0., bounds_error=False)
-#        q_i, w_i = np.polynomial.laguerre.laggauss(Nlaguerre)
-        val = np.sum(w_i_Lag * np.exp(q_i_Lag) * interpF(q_i_Lag))
-        return (-8. * GravG * val * 3.045 / self.k**2 / np.pi / hbar**2. / (2.998e10)**2. * Mpc_to_cm**2. / a**2. *self.T_nu**4.)
+#        interpF = interp1d(self.q_list, integrnd, kind='cubic', fill_value=0., bounds_error=False)
+#        val = np.sum(w_i_Lag * np.exp(q_i_Lag) * interpF(q_i_Lag))
+        val = np.sum(w_i_Lag * np.exp(q_i_Lag) * integrnd)
+        return (-8. * GravG * val * 3.045 / self.k**2 / np.pi * (Mpc_to_cm / hbar / 2.998e10)**2. / a**2. *self.T_nu**4.)
 
     def epsilon_test(self, a):
         cdef double phiTerm = 2. * self.k**2. / (3. * a) * self.combined_vector[0][-1]
