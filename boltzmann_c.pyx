@@ -419,8 +419,6 @@ class Universe(object):
         self.eta_vector = [eta_st]
         self.y_vector = [y_st]
 
-#        print('INITIAL EPSILON TEST: ', abs(self.epsilon_test(np.exp(y_st))))
-
         cdef int try_count = 0
         cdef int try_max = 40
         FailRUN = False
@@ -428,7 +426,6 @@ class Universe(object):
 
         cdef double y_use, eta_use, y_diff, test_epsilon, a_use
         cdef int i
-
 
         while (self.eta_vector[-1] < (self.eta_0 - 1.)):
 
@@ -501,7 +498,7 @@ class Universe(object):
         cdef double aval, phi_term_back, psi_term_back, eta_back
         sources[:, 0] = self.eta_vector
 
-        pi_polar = [self.combined_vector[6][i] + self.combined_vector[11][i] + self.combined_vector[12][i] for i in range(len(self.eta_vector))]
+        pi_polar = [self.combined_vector[6][i] + self.combined_vector[9][i] + self.combined_vector[10][i] for i in range(len(self.eta_vector))]
 
         sources[:, 2] = np.asarray(self.combined_vector[4])
         der2_pi = np.zeros_like(sources[:, 0])
@@ -584,11 +581,12 @@ class Universe(object):
             CsndB = self.Cs_Sqr(a_val)
         else:
             CsndB = self.Cs_Sqr(1e-4) * 1e-4 / a_val
+
         cdef double rG = self.rhoG(a_val)
         cdef double rB = self.rhoB(a_val)
         cdef double rC = self.rhoCDM(a_val)
 
-        eta_matter_rad = self.scale_to_ct(6. * self.omega_R / self.omega_M)
+        eta_matter_rad = self.scale_to_ct(5. * self.omega_R / self.omega_M)
         xc = max(eta_matter_rad * self.k, 1e3)
         self.gamma_supp = lambda x: 0.5 * (1. - np.tanh((x - xc) / 50.))
         cdef gammaSup = self.gamma_supp(self.k * eta)
@@ -606,6 +604,8 @@ class Universe(object):
             tflip_TCA = True
         else:
             tflip_TCA = False
+
+        tflip_TCA = False
 
         cdef cnp.ndarray[double] PsiTerm = np.zeros(self.TotalVars+1)
         PsiTerm[0] += -1.
