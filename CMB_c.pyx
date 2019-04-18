@@ -226,7 +226,7 @@ class CMB(object):
             eta_st = np.min([1e-3/k, 1e-1/0.7])
             aval = self.ct_to_scale(eta_st)
             ONu = self.OM_nu(aval) / rho_critical / hbar**3. / (2.998e10)**3./ (self.H_0/1e2)**2. / 1e9
-            extraNorm[i] = (1. + 2. * ONu / (0.75 * aval**2. * self.OM_M + self.OM_g / aval**-4. + ONu) / 5.)
+            extraNorm[i] = (1. + 2. * ONu / (0.75 * aval**2.*self.OM_M + self.OM_g / aval**4. + ONu) / 5.)
 
         for i in range(len(ell_tab)):
             ell = ell_tab[i]
