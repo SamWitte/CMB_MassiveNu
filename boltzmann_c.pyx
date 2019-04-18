@@ -52,10 +52,10 @@ class Universe(object):
         self.k = k
 
         self.accuracy = accuracy
-        self.nu_q_bins = 100
-        self.q_list = np.linspace(1e-3, 20, self.nu_q_bins)
-#        self.nu_q_bins = Nlaguerre
-#        self.q_list = q_i_Lag
+#        self.nu_q_bins = 100
+#        self.q_list = np.linspace(1e-3, 20, self.nu_q_bins)
+        self.nu_q_bins = Nlaguerre
+        self.q_list = q_i_Lag
         self.TotalVars = 5 + 2*(self.Lmax+1) + (self.Lmax+1)*self.nu_q_bins
 
         self.step = 0
@@ -81,6 +81,10 @@ class Universe(object):
             self.combined_vector[i+self.neu_indx] = self.Neu_Dot[i] = []
 
         self.compute_funcs()
+
+        eta_matter_rad = self.scale_to_ct(5. * self.omega_g * (1. + T_nu) / self.omega_M)
+        xc = max(eta_matter_rad * self.k, 1e3)
+        self.gamma_supp = lambda x: 0.5 * (1. - np.tanh((x - xc) / 50.))
 
         self.testing = testing
         if self.testing:
@@ -370,7 +374,7 @@ class Universe(object):
         cdef double OM = self.omega_M
         cdef double ONu = self.rhoNeu_true(aval) / rho_critical / hbar**3. / (2.998e10)**3./ self.little_h**2. / 1e9
 
-        cdef double rfactor = ONu / (ONu + self.omega_R*aval**-4.)
+        cdef double rfactor = ONu / (0.75 * OM * aval**2. + self.omega_R*aval**-4. + ONu)
         cdef double HUB = self.Hub(aval)
 
         self.inital_perturb = -1./6.
@@ -577,18 +581,13 @@ class Universe(object):
         cdef double RR = (4.*self.rhoG(a_val))/(3.*self.rhoB(a_val))
         cdef double HUB = self.Hub(a_val)
         cdef double dTa = -10.**self.Xe(log10(a_val))*(1. - 0.245)*self.n_bary*6.65e-29*1e4/a_val**2./3.24078e-25
-        if a_val > 1e-4:
-            CsndB = self.Cs_Sqr(a_val)
-        else:
-            CsndB = self.Cs_Sqr(1e-4) * 1e-4 / a_val
+
+        CsndB = self.Cs_Sqr(a_val)
 
         cdef double rG = self.rhoG(a_val)
         cdef double rB = self.rhoB(a_val)
         cdef double rC = self.rhoCDM(a_val)
 
-        eta_matter_rad = self.scale_to_ct(5. * self.omega_R / self.omega_M)
-        xc = max(eta_matter_rad * self.k, 1e3)
-        self.gamma_supp = lambda x: 0.5 * (1. - np.tanh((x - xc) / 50.))
         cdef gammaSup = self.gamma_supp(self.k * eta)
 
         if self.testing:
@@ -784,18 +783,18 @@ class Universe(object):
         integrnd = [self.Neu_Dot[i][-1] * self.q_list[i]**2. * np.sqrt((self.m_nu * a / self.T_nu)**2.+self.q_list[i]**2.) / \
                     (1. + np.exp(np.sqrt((self.m_nu * a / self.T_nu)**2.+self.q_list[i]**2.) )) for i in range(self.nu_q_bins)]
 
-        interpF = interp1d(self.q_list, integrnd, kind='cubic', bounds_error=False, fill_value = 0.)
-        val = np.sum(w_i_Lag * np.exp(q_i_Lag) * interpF(q_i_Lag))
-#        val = np.sum(w_i_Lag * np.exp(q_i_Lag) * integrnd)
+#        interpF = interp1d(self.q_list, integrnd, kind='cubic', bounds_error=False, fill_value = 0.)
+#        val = np.sum(w_i_Lag * np.exp(q_i_Lag) * interpF(q_i_Lag))
+        val = np.sum(w_i_Lag * np.exp(q_i_Lag) * integrnd)
         return -3.045 * val * 4. * np.pi * 2. / (2.*np.pi)**3.  / a**4. * self.T_nu**4.
 
     def neu_vel_term(self, a):
         # (\rho_nu + P_nu) * \theta , up to normalization
         integrnd = [self.Neu_Dot[self.nu_q_bins + i][-1] * self.q_list[i]**3. / \
                         (1. + np.exp(np.sqrt((self.m_nu*a/self.T_nu)**2.+self.q_list[i]**2.) )) for i in range(self.nu_q_bins)]
-        interpF = interp1d(self.q_list, integrnd, kind='cubic', bounds_error=False, fill_value = 0.)
-        val = np.sum(w_i_Lag * np.exp(q_i_Lag) * interpF(q_i_Lag))
-#        val = np.sum(w_i_Lag * np.exp(q_i_Lag) * integrnd)
+#        interpF = interp1d(self.q_list, integrnd, kind='cubic', bounds_error=False, fill_value = 0.)
+#        val = np.sum(w_i_Lag * np.exp(q_i_Lag) * interpF(q_i_Lag))
+        val = np.sum(w_i_Lag * np.exp(q_i_Lag) * integrnd)
         return val * 4. * np.pi * self.k  * 2. / (2.*np.pi)**3.  / a**4. * 3.045 * self.T_nu**4.
 
     def neu_N2_term(self, a):
@@ -803,9 +802,9 @@ class Universe(object):
         integrnd = [self.Neu_Dot[self.nu_q_bins*2 + i][-1] * self.q_list[i]**4. /
                     np.sqrt((self.m_nu*a/self.T_nu)**2. + self.q_list[i]**2.) /
                     (1. + np.exp(np.sqrt((self.m_nu*a/self.T_nu)**2.+self.q_list[i]**2.))) for i in range(self.nu_q_bins)]
-        interpF = interp1d(self.q_list, integrnd, kind='cubic', bounds_error=False, fill_value = 0.)
-        val = np.sum(w_i_Lag * np.exp(q_i_Lag) * interpF(q_i_Lag))
-#        val = np.sum(w_i_Lag * np.exp(q_i_Lag) * integrnd)
+#        interpF = interp1d(self.q_list, integrnd, kind='cubic', bounds_error=False, fill_value = 0.)
+#        val = np.sum(w_i_Lag * np.exp(q_i_Lag) * interpF(q_i_Lag))
+        val = np.sum(w_i_Lag * np.exp(q_i_Lag) * integrnd)
         return (-8. * GravG * val * 3.045 / self.k**2 / np.pi * (Mpc_to_cm / hbar / 2.998e10)**2. / a**2. *self.T_nu**4.)
 
     def epsilon_test(self, a):

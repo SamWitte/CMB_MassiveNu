@@ -16,7 +16,7 @@ z_reion = 10.
 Om_b_load = 0.0492
 Om_c_load = 0.266
 mass_nu = 1e-10 # Sum neutrino mass in eV
-T_nu = 0.71599 # relative temperature of neutrinos to photons
+T_nu = 0.71475 # relative temperature of neutrinos to photons
 
 
 Ftag = 'StandardUniverse'
@@ -26,7 +26,7 @@ OM_g = 5.43e-5
 OM_L = 0.7 # Doesnt matter, it calculates with flat Uni
 
 lmax_Pert = 7
-process_Num = 6
+process_Num = 10
 
 compute_LP = True
 compute_CMB = True

@@ -9,7 +9,7 @@ kboltz = 8.617e-5 # ev / K
 hbar = 6.58211951e-16
 Mpc_to_cm = 3.08567758128E+24
 
-Nlaguerre = 30
+Nlaguerre = 20
 q_i_Lag, w_i_Lag = np.polynomial.laguerre.laggauss(Nlaguerre)
 
 

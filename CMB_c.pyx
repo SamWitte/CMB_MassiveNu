@@ -37,11 +37,12 @@ class CMB(object):
 
         self.OM_b = OM_b
         self.OM_c = OM_c
+        self.OM_M = OM_b + OM_c
         self.OM_g = OM_g
         self.OM_L = OM_L
         self.T_nu = T_nu
         self.mass_nu = mass_nu
-#        self.OM_nu = (7./8) * (4./11.)**(4./3) * Neff * OM_g
+
 
         self.kmin = kmin
         self.kmax = kmax
@@ -142,6 +143,7 @@ class CMB(object):
             SingleUni.tau_functions()
         self.eta0 = SingleUni.eta_0
         self.H_0 = SingleUni.H_0
+        self.OM_nu = SingleUni.rhoNeu_true
 
         opt_depthL = np.loadtxt(path + '/precomputed/working_expOpticalDepth.dat')
         self.opt_depth = interp1d(opt_depthL[:,0], opt_depthL[:,1], kind='cubic', bounds_error=False, fill_value=0.)
@@ -219,10 +221,17 @@ class CMB(object):
         cdef cnp.ndarray[double, ndim=2] CL_table = np.zeros((len(ell_tab), 2))
         cdef double GF, ell
 
+        extraNorm = np.zeros_like(kgrid)
+        for i,k in enumerate(kgrid):
+            eta_st = np.min([1e-3/k, 1e-1/0.7])
+            aval = self.ct_to_scale(eta_st)
+            ONu = self.OM_nu(aval) / rho_critical / hbar**3. / (2.998e10)**3./ (self.H_0/1e2)**2. / 1e9
+            extraNorm[i] = (1. + 2. * ONu / (0.75 * aval**2. * self.OM_M + self.OM_g / aval**-4. + ONu) / 5.)
+
         for i in range(len(ell_tab)):
             ell = ell_tab[i]
             CL_table[i, 0] = ell
-            CL_table[i, 1] =  ell * (ell + 1) * trapz( (ThetaTab[1:, i] / self.init_pert)**2. *
+            CL_table[i, 1] =  ell * (ell + 1) * trapz( (ThetaTab[1:, i] / self.init_pert / extraNorm)**2. *
                                                   (kgrid / 0.05)**(self.n_s_index - 1.) / kgrid, kgrid) * self.A_s
 
             if math.isnan(CL_table[i, 0]):
