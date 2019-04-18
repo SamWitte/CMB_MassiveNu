@@ -535,9 +535,9 @@ class Universe(object):
 #                            der2_pi[i] for i in range(len(self.eta_vector))]
 
         source_interp = np.zeros(( len(global_a_list), 4 ))
-        s_int_1 = interp1d(sources[:, 0], sources[:, 1], kind='cubic', fill_value=0., bounds_error=False)
-        s_int_2 = interp1d(sources[:, 0], sources[:, 2], kind='cubic', fill_value=0., bounds_error=False)
-        s_int_3 = interp1d(sources[:, 0], sources[:, 3], kind='cubic', fill_value=0., bounds_error=False)
+        s_int_1 = interp1d(sources[:, 0], sources[:, 1] / self.Phi_vec[0], kind='cubic', fill_value=0., bounds_error=False)
+        s_int_2 = interp1d(sources[:, 0], sources[:, 2] / self.Phi_vec[0], kind='cubic', fill_value=0., bounds_error=False)
+        s_int_3 = interp1d(sources[:, 0], sources[:, 3] / self.Phi_vec[0], kind='cubic', fill_value=0., bounds_error=False)
         source_interp[:, 0] = self.scale_to_ct(global_a_list)
         source_interp[:,1] = s_int_1(source_interp[:, 0])
         source_interp[:,2] = s_int_2(source_interp[:, 0])
