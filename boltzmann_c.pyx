@@ -411,6 +411,7 @@ class Universe(object):
 
     def dln_f0_dln_q(self, a, q):
         erg = np.sqrt((a * self.m_nu / self.T_nu)**2. + q**2.)
+        erg[erg > 10.] = 10.
         return -q**2. * np.exp(erg) / (1. + np.exp(erg)) / erg
 
 
@@ -723,26 +724,26 @@ class Universe(object):
         for i in range(self.nu_q_bins):
             # Neu 0
             q_o_e = self.q_list[i] / erg_list[i]
-            Jma[self.neu_indx+i,self.neu_indx+i+self.nu_q_bins] += -self.k / (HUB*a_val) * q_o_e
-            Jma[self.neu_indx+i,:] += Jma[0,:] * df_term[i]
+            Jma[self.neu_indx+i,self.neu_indx+i+self.nu_q_bins] += -self.k / (HUB*a_val) * q_o_e * gammaSup
+            Jma[self.neu_indx+i,:] += Jma[0,:] * df_term[i] * gammaSup
 
             # Neu 1
-            Jma[self.neu_indx+i+self.nu_q_bins, :] += -self.k * PsiTerm / (3.*HUB*a_val) * df_term[i] / q_o_e
-            Jma[self.neu_indx+i+self.nu_q_bins, self.neu_indx+i] += self.k / (3.*HUB*a_val) * q_o_e
-            Jma[self.neu_indx+i+self.nu_q_bins, self.neu_indx+i+self.nu_q_bins*2] += -2.*self.k/ (3.*HUB*a_val) * q_o_e
+            Jma[self.neu_indx+i+self.nu_q_bins, :] += -self.k * PsiTerm / (3.*HUB*a_val) * df_term[i] / q_o_e * gammaSup
+            Jma[self.neu_indx+i+self.nu_q_bins, self.neu_indx+i] += self.k / (3.*HUB*a_val) * q_o_e * gammaSup
+            Jma[self.neu_indx+i+self.nu_q_bins, self.neu_indx+i+self.nu_q_bins*2] += -2.*self.k/ (3.*HUB*a_val) * q_o_e * gammaSup
 
             # Neu 2
-            Jma[self.neu_indx+i+self.nu_q_bins*2,self.neu_indx+i+self.nu_q_bins] += 2.*self.k/ (5.*HUB*a_val) * q_o_e
-            Jma[self.neu_indx+i+self.nu_q_bins*2,self.neu_indx+i+self.nu_q_bins*3] += -3.*self.k/ (5.*HUB*a_val) * q_o_e
+            Jma[self.neu_indx+i+self.nu_q_bins*2,self.neu_indx+i+self.nu_q_bins] += 2.*self.k/ (5.*HUB*a_val) * q_o_e * gammaSup
+            Jma[self.neu_indx+i+self.nu_q_bins*2,self.neu_indx+i+self.nu_q_bins*3] += -3.*self.k/ (5.*HUB*a_val) * q_o_e * gammaSup
 
             for j in range(self.Lmax - 3):
                 # Neutrinos
-                Jma[self.neu_indx+i+self.nu_q_bins*(j+3),self.neu_indx+i+self.nu_q_bins*(j+2)] += self.k*elV/((2.*elV + 1.)*(HUB*a_val)) * q_o_e
-                Jma[self.neu_indx+i+self.nu_q_bins*(j+3),self.neu_indx+i+self.nu_q_bins*(j+4)] += -self.k*(elV+1.)/((2.*elV + 1.)*(HUB*a_val)) * q_o_e
+                Jma[self.neu_indx+i+self.nu_q_bins*(j+3),self.neu_indx+i+self.nu_q_bins*(j+2)] += self.k*elV/((2.*elV + 1.)*(HUB*a_val)) * q_o_e * gammaSup
+                Jma[self.neu_indx+i+self.nu_q_bins*(j+3),self.neu_indx+i+self.nu_q_bins*(j+4)] += -self.k*(elV+1.)/((2.*elV + 1.)*(HUB*a_val)) * q_o_e * gammaSup
 
             # Nu Lmax
-            Jma[-2, -2 - self.nu_q_bins] += self.k / (HUB*a_val) * q_o_e
-            Jma[-2, -2] += -(self.Lmax+1.)/(eta*HUB*a_val)
+            Jma[-2, -2 - self.nu_q_bins] += self.k / (HUB*a_val) * q_o_e * gammaSup
+            Jma[-2, -2] += -(self.Lmax+1.)/(eta*HUB*a_val) * gammaSup
 
         return Jma
 
