@@ -410,7 +410,7 @@ class Universe(object):
 
     def dln_f0_dln_q(self, a, q):
         erg = np.sqrt((a * self.m_nu / self.T_nu)**2. + q**2.)
-        erg[erg > 10.] = 10.
+        erg[erg > 7.] = 7.
         return -q**2. * np.exp(erg) / (1. + np.exp(erg)) / erg
 
 
