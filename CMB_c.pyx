@@ -62,11 +62,7 @@ class CMB(object):
 
         self.init_pert = -1/6.
 
-        ell_val = list(range(self.lmin, self.lmax, 20))
-        indxT = len(ell_val)
-        for i in list(range(indxT)):
-            if (i%2 == 1) and (ell_val[indxT - i - 1] > 300):
-                ell_val.pop(indxT - i - 1)
+        ell_val = list(range(self.lmin, self.lmax, 15))
 
         if killF:
             self.clearfiles()
@@ -171,10 +167,10 @@ class CMB(object):
             kgrid = [kVAL]
 
         for k in kgrid:
-            stepsize = 1e-2
+            stepsize = 1e-3
 
             SingleUni = Universe(k, self.OM_b, self.OM_c, self.OM_g, self.OM_L,
-                                stepsize=stepsize, accuracy=1e-3, lmax=self.lmax_Pert,
+                                stepsize=stepsize, accuracy=5e-4, lmax=self.lmax_Pert,
                                 hubble_c=self.HubbleParam, zreion=self.z_reion,
                                 m_nu=self.mass_nu, T_nu=self.T_nu)
             soln = SingleUni.solve_system(compute_TH)
@@ -220,13 +216,6 @@ class CMB(object):
         cdef cnp.ndarray[double] ell_tab = ThetaTab[0,:]
         cdef cnp.ndarray[double, ndim=2] CL_table = np.zeros((len(ell_tab), 2))
         cdef double GF, ell
-
-#        extraNorm = np.zeros_like(kgrid)
-#        for i,k in enumerate(kgrid):
-#            eta_st = np.min([1e-3/k, 1e-1/0.7])
-#            aval = self.ct_to_scale(eta_st)
-#            ONu = self.OM_nu(aval) / rho_critical / hbar**3. / (2.998e10)**3./ (self.H_0/1e2)**2. / 1e9
-#            extraNorm[i] = (1. + 2. * ONu / (0.75 * aval**2.*self.OM_M + self.OM_g / aval**4. + ONu) / 5.)
 
         for i in range(len(ell_tab)):
             ell = ell_tab[i]
