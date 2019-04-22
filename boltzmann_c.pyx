@@ -35,9 +35,10 @@ class Universe(object):
         self.tcmb = 2.7255
         self.omega_b = omega_b
         self.omega_cdm = omega_cdm
-        self.omega_g = omega_g
+        self.omega_g = np.pi**2. * (2.7255 * kboltz) ** 4. / (15. * rho_critical  * (hubble_c / 100.)**2. * 1e9) / (hbar * 2.998e10)**3.
+
         self.omega_M = omega_cdm + omega_b
-        self.omega_R = omega_g
+        self.omega_R = self.omega_g
         self.omega_L = 1. - self.omega_M - self.omega_R
         self.H_0 = hubble_c / 2.998e5 # units Mpc^-1
         self.little_h = hubble_c / 1e2
@@ -371,10 +372,8 @@ class Universe(object):
         return
 
     def init_conds(self, eta_0, aval):
-        cdef double OM = self.omega_M
         cdef double ONu = self.rhoNeu_true(aval) / rho_critical / hbar**3. / (2.998e10)**3./ self.little_h**2. / 1e9
-
-        cdef double rfactor = ONu / (0.75 * OM * aval**2. + self.omega_R*aval**-4. + ONu)
+        cdef double rfactor = ONu / (self.omega_R*aval**-4. + ONu)
         cdef double HUB = self.Hub(aval)
 
         self.inital_perturb = -1./6.
@@ -775,7 +774,6 @@ class Universe(object):
     def rhoNeu_true(self, a):
         val = np.sum(w_i_Lag * np.exp(q_i_Lag) * q_i_Lag**2. * np.sqrt((self.m_nu*a/self.T_nu)**2. + q_i_Lag**2.) / \
             (1. + np.exp(np.sqrt((self.m_nu*a/self.T_nu)**2. + q_i_Lag**2.))) ) * self.T_nu**4.
-#        val = 7*np.pi**4 * self.T_nu**4. / 120.
         units =  2. / (2.*np.pi)**3.
         return 3.045 * val * 4. * np.pi * units / a**4. # units ev ^ 4
 
